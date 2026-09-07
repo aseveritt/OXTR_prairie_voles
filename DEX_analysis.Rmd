@@ -1090,14 +1090,14 @@ grid.arrange(g1,g2,ncol=2)
 </details>
 
 ```{r, fig.height=10, fig.width=12}
-library(circlize)
 mymat <- ddsnorm %>% 
     data.frame() %>% 
     filter(row.names(ddsnorm) %in% sig_joint$ensembl_gene_id) %>% 
     rownames_to_column() %>% 
     left_join(vole_annotation[,c("ensembl_gene_id", "external_gene_name")], by=c("rowname"="ensembl_gene_id")) %>%
     mutate(longer=ifelse(external_gene_name != "", external_gene_name, ensembl_gene_id)) %>%
-    column_to_rownames('longer') %>% select(-c(external_gene_name, rowname))
+    column_to_rownames('longer') %>% 
+    dplyr::select(-c(external_gene_name, rowname))
 
 scaled_mat = t(scale(t(mymat)))
 
@@ -1142,20 +1142,21 @@ draw(ht, merge_legend = TRUE)
 ```{r}
 bonding_df <- data.frame(bonding_df)
 d0 <- bonding_df %>% 
-  select(c("ensembl_gene_id", colnames(bonding_df)[grep("log2FoldChange", colnames(bonding_df))])) %>%
+  dplyr::select(c("ensembl_gene_id", colnames(bonding_df)[grep("log2FoldChange", colnames(bonding_df))])) %>%
   tidyr::pivot_longer(cols = -c(ensembl_gene_id), values_to="log2FC", names_to="subgroup") %>%
   mutate(subgroup=gsub("log2FoldChange_", "", subgroup)) 
 d1 <- bonding_df %>%
-  select(c("ensembl_gene_id", colnames(bonding_df)[grep("padj", colnames(bonding_df))])) %>%
+  dplyr::select(c("ensembl_gene_id", colnames(bonding_df)[grep("padj", colnames(bonding_df))])) %>%
   tidyr::pivot_longer(cols = -c(ensembl_gene_id), values_to="padj", names_to="subgroup") %>%
   mutate(subgroup=gsub("padj_", "", subgroup)) 
 d2 <- bonding_df %>%
-  select(c("ensembl_gene_id", colnames(bonding_df)[grep("lfcSE", colnames(bonding_df))])) %>%
+  dplyr::select(c("ensembl_gene_id", colnames(bonding_df)[grep("lfcSE", colnames(bonding_df))])) %>%
   tidyr::pivot_longer(cols = -c(ensembl_gene_id), values_to="lfcSE", names_to="subgroup") %>%
   mutate(subgroup=gsub("lfcSE_", "", subgroup)) 
 
 d <- join(d2, join(d0, d1, by=c("ensembl_gene_id", "subgroup")), by=c("ensembl_gene_id", "subgroup")) 
-d <- join(d, vole_annotation %>% select(ensembl_gene_id, external_gene_name), by="ensembl_gene_id")
+d <- join(d, vole_annotation %>% 
+            dplyr::select(ensembl_gene_id, external_gene_name), by="ensembl_gene_id")
 d <- d[d$subgroup %ni% c("WT","MUT","F","M"),]
 
 d$subgroup <- d$subgroup
@@ -1174,20 +1175,21 @@ barchart_subgroup_df <- d
 ```{r}
 bonding_df <- data.frame(bonding_df)
 d0 <- bonding_df %>% 
-  select(c("ensembl_gene_id", colnames(bonding_df)[grep("log2FoldChange", colnames(bonding_df))])) %>%
+  dplyr::select(c("ensembl_gene_id", colnames(bonding_df)[grep("log2FoldChange", colnames(bonding_df))])) %>%
   tidyr::pivot_longer(cols = -c(ensembl_gene_id), values_to="log2FC", names_to="subgroup") %>%
   mutate(subgroup=gsub("log2FoldChange_", "", subgroup)) 
 d1 <- bonding_df %>%
-  select(c("ensembl_gene_id", colnames(bonding_df)[grep("padj", colnames(bonding_df))])) %>%
+  dplyr::select(c("ensembl_gene_id", colnames(bonding_df)[grep("padj", colnames(bonding_df))])) %>%
   tidyr::pivot_longer(cols = -c(ensembl_gene_id), values_to="padj", names_to="subgroup") %>%
   mutate(subgroup=gsub("padj_", "", subgroup)) 
 d2 <- bonding_df %>%
-  select(c("ensembl_gene_id", colnames(bonding_df)[grep("lfcSE", colnames(bonding_df))])) %>%
+  dplyr::select(c("ensembl_gene_id", colnames(bonding_df)[grep("lfcSE", colnames(bonding_df))])) %>%
   tidyr::pivot_longer(cols = -c(ensembl_gene_id), values_to="lfcSE", names_to="subgroup") %>%
   mutate(subgroup=gsub("lfcSE_", "", subgroup)) 
 
 d <- join(d2, join(d0, d1, by=c("ensembl_gene_id", "subgroup")), by=c("ensembl_gene_id", "subgroup")) 
-d <- join(d, vole_annotation %>% select(ensembl_gene_id, external_gene_name), by="ensembl_gene_id")
+d <- join(d, vole_annotation %>% 
+            dplyr::select(ensembl_gene_id, external_gene_name), by="ensembl_gene_id")
 d <- d[d$subgroup %in% c("F","M", "joint"),]
 
 d$subgroup <- d$subgroup
@@ -1330,7 +1332,7 @@ for (pick in ofinterest){
   
   vect = bonding_df %>% 
     filter(ensembl_gene_id == id) %>% 
-    select(c("padj_WTF", "padj_MUTF", "padj_WTM", "padj_MUTM")) %>%
+    dplyr::select(c("padj_WTF", "padj_MUTF", "padj_WTM", "padj_MUTM")) %>%
     as.numeric() 
   strip <- ggh4x::strip_themed(background_x = elem_list_rect(fill = ifelse(vect < 0.05, "lightgrey","white")))
   g1 <- ggplot(e[e$external_gene_name == pick, ], aes(x=tmp, y=log2(expr), fill=tmp)) + 
@@ -1489,13 +1491,13 @@ res = lfcShrink(dds, type="ashr", contrast=c("group", "Mut6_F", "WT_F"), quiet =
 mydf_F <- res %>% as.data.frame() %>% 
   rownames_to_column(var="ensembl_gene_id") %>% 
   left_join(vole_annotation, by="ensembl_gene_id")
-genotype_df$log2FC_F <- res$log2FoldChange; genotype_df$padj_F <- res$log2FoldChange
+genotype_df$log2FC_F <- res$log2FoldChange; genotype_df$padj_F <- res$padj
 
 res = lfcShrink(dds, type="ashr", contrast=c("group", "Mut6_M", "WT_M"), quiet = TRUE)  
 mydf_M <- res %>% as.data.frame() %>% 
   rownames_to_column(var="ensembl_gene_id") %>% 
   left_join(vole_annotation, by="ensembl_gene_id")
-genotype_df$log2FC_M <- res$log2FoldChange; genotype_df$padj_M <- res$log2FoldChange
+genotype_df$log2FC_M <- res$log2FoldChange; genotype_df$padj_M <- res$padj
 ```
 
 ```{r}
@@ -1648,6 +1650,8 @@ g1 <- amanda.volcano.plot(mydf_all, " ", lab, FCcut = 0.25, Padjcut = 0.05) +
   ggtitle("Volcano Plot of Genotype Differential Expression") + 
   theme(legend.justification=c(0,1), legend.position=c(0,1))
 ggsave(plot=g1, file=paste0(output_dir, "figures/SuppFig6A_Volcano.svg"), width=10, height=7)
+
+g1
 ```
 
 #### Selected Gene Plot
@@ -2021,7 +2025,7 @@ n = 5
 mycol= hue_pal()(n)
 p1 <- suppressWarnings(
   treeplot(ego2, color="p.adjust", showCategory = 65,
-  cluster.params = list(color=mycol, n=n))
+  nCluster = n, group_color = mycol)
   ) +  
   scale_fill_manual(values=rep(c("white"), n)) +
   scale_colour_continuous(low="cornflowerblue", high="red", name = "adjp", 
@@ -2030,7 +2034,7 @@ p1$layers[[3]]$aes_params$size <- 3 # clusters
 p1$layers[[7]]$aes_params$size <- 3 #tree labels
 
 #p2 <- treeplot(ego2, color="median_log2fc", showCategory = 65,
-#  cluster.params = list(color=mycol, n=n)) +  
+#  nCluster = n, group_color = mycol) +  
 #  scale_fill_manual(values=rep(c("white"), n)) +
 #  scale_colour_continuous(low="cornflowerblue", high="red", name = #"median_log2fc", 
 #            guide = guide_colorbar(reverse = TRUE)) #+ theme(legend.position = #"bottom")
@@ -2049,9 +2053,9 @@ p1 + ggtitle("All terms: nodes colored by padj")
 colour_breaks <- c(-0.4, -0.2, 0.2)
 colours <- c( "#FDE333FF","#007094FF", "#4B0055FF")
 
-p2 <- suppressWarnings(treeplot(ego2, color="median_log2fc", showCategory = 65, 
-               offset=30, offset_tiplab=2,
-  cluster.params = list(color=mycol, n=n),
+p2 <- suppressWarnings(treeplot(ego2, color="median_log2fc", showCategory = 65,
+               cladelab_offset=30, tiplab_offset=2,
+  nCluster = n,
   group_color = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F8766D"))
   ) +  
   #scale_fill_manual(values=rep(c("white"), n)) +
@@ -2134,10 +2138,12 @@ ego_down <- amanda_enrichRobject(DEgenes_downs, backgroundGenes_mm, enriched.GO_
 
 ```{r, message=FALSE, warning=FALSE}
 #https://github.com/YuLab-SMU/enrichplot/blob/devel/R/treeplot.R
+
 n = 4
 mycol= hue_pal()(n)
+k_up <- min(n, nrow(ego_up))
 p1 <- treeplot(ego_up, color="p.adjust", showCategory = 65,
-  cluster.params = list(color=mycol, n=n)) +  
+  nCluster = k_up, group_color = mycol[seq_len(k_up)]) +  
   scale_fill_manual(values=rep(c("white"), n)) +
   scale_colour_continuous(low="cornflowerblue", high="red", name = "adjp", 
             guide = guide_colorbar(reverse = TRUE)) #+ theme(legend.position = "bottom")
@@ -2145,7 +2151,7 @@ p1$layers[[3]]$aes_params$size <- 3 # clusters
 p1$layers[[7]]$aes_params$size <- 3 #tree labels
 
 p2 <- treeplot(ego_down, color="p.adjust", showCategory = 65,
-  cluster.params = list(color=mycol, n=n)) +  
+  nCluster = n, group_color = mycol) +  
   scale_fill_manual(values=rep(c("white"), n)) +
   scale_colour_continuous(low="cornflowerblue", high="red", name = "adjp", 
             guide = guide_colorbar(reverse = TRUE)) #+ theme(legend.position = "bottom")
@@ -2207,10 +2213,12 @@ ego_male <- amanda_enrichRobject(DEgenes_male, backgroundGenes_mm, enriched.GO_m
 ```
 
 ```{r, message=FALSE, warning=FALSE}
-n = 4
+n = 3
 mycol= hue_pal()(n)
+
+k_up <- min(n, nrow(ego_female), nrow(ego_male))
 p1 <- treeplot(ego_female, color="p.adjust", showCategory = 65,
-  cluster.params = list(color=mycol, n=n)) +  
+  nCluster = n, group_color = mycol[seq_len(k_up)]) +  
   scale_fill_manual(values=rep(c("white"), n)) +
   scale_colour_continuous(low="cornflowerblue", high="red", name = "adjp", 
             guide = guide_colorbar(reverse = TRUE)) #+ theme(legend.position = "bottom")
@@ -2218,7 +2226,7 @@ p1$layers[[3]]$aes_params$size <- 3 # clusters
 p1$layers[[7]]$aes_params$size <- 3 #tree labels
 
 p2 <- treeplot(ego_male, color="p.adjust", showCategory = 65,
-  cluster.params = list(color=mycol, n=n)) +  
+  nCluster = n, group_color = mycol[seq_len(k_up)]) +  
   scale_fill_manual(values=rep(c("white"), n)) +
   scale_colour_continuous(low="cornflowerblue", high="red", name = "adjp", 
             guide = guide_colorbar(reverse = TRUE)) #+ theme(legend.position = "bottom")
